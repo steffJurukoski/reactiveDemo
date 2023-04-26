@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.reactiveDemo.model.Books;
 import com.example.reactiveDemo.repo.BookRepository;
+import com.example.reactiveDemo.service.BookService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,40 +19,35 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
-    public BookController(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
     @GetMapping
     public Flux<Books> getAllBooks() {
-        return bookRepository.findAll();
+        return bookService.getAllBooks();
     }
 
     @GetMapping("/{id}")
     public Mono<Books> getBookById(@PathVariable String id) {
-        return bookRepository.findById(id);
+        return bookService.getBookById(id);
     }
 
     @PostMapping
     public Mono<Books> createBook(@RequestBody Books book) {
-        return bookRepository.save(book);
+        return bookService.createBook(book);
     }
 
     @PutMapping("/{id}")
     public Mono<Books> updateBook(@PathVariable String id, @RequestBody Books book) {
-        return bookRepository.findById(id)
-                .flatMap(existingBook -> {
-                    existingBook.setTitle(book.getTitle());
-                    existingBook.setAuthor(book.getAuthor());
-                    return bookRepository.save(existingBook);
-                });
+        return bookService.updateBook(id, book);
     }
 
     @DeleteMapping("/{id}")
     public Mono<Void> deleteBook(@PathVariable String id) {
-        return bookRepository.deleteById(id);
+        return bookService.deleteBook(id);
     }
 }
 

@@ -1,5 +1,7 @@
 package com.example.reactiveDemo.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +21,9 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
-    private final BookService bookService;
-
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
-    }
+	
+	@Autowired
+    BookService bookService;
 
     @GetMapping
     public Flux<Books> getAllBooks() {
@@ -31,7 +31,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public Mono<Books> getBookById(@PathVariable String id) {
+    public Mono<ResponseEntity<Books>> getBookById(@PathVariable String id) {
         return bookService.getBookById(id);
     }
 
@@ -41,12 +41,12 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public Mono<Books> updateBook(@PathVariable String id, @RequestBody Books book) {
+    public Mono<ResponseEntity<Books>> updateBook(@PathVariable String id, @RequestBody Books book) {
         return bookService.updateBook(id, book);
     }
 
     @DeleteMapping("/{id}")
-    public Mono<Void> deleteBook(@PathVariable String id) {
+    public Mono<ResponseEntity<Void>> deleteBook(@PathVariable String id) {
         return bookService.deleteBook(id);
     }
 }

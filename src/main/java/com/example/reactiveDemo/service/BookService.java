@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.reactiveDemo.model.Books;
 import com.example.reactiveDemo.repo.BookRepository;
+import com.example.reactiveDemo.exception.ResourceNotFoundException;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,7 +25,7 @@ public class BookService {
 	public Mono<ResponseEntity<Books>> getBookById(String id) {
 		return bookRepository.findById(id)
 				.map(book -> ResponseEntity.ok(book))
-                .defaultIfEmpty(new ResponseEntity("Resource book not found in database", HttpStatus.NOT_FOUND));
+				.switchIfEmpty(Mono.error(new ResourceNotFoundException("Book with id " + id + " not found")));
     }
 	
 	public Mono<Books> createBook(Books book) {
@@ -39,12 +40,14 @@ public class BookService {
                     return bookRepository.save(existingBook);
                 })
                 .map(updatedProduct -> new ResponseEntity<>(updatedProduct, HttpStatus.OK))
-                .defaultIfEmpty(new ResponseEntity("Resource book not found in database", HttpStatus.NOT_FOUND));
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Book with id " + id + " not found")));
     }
 	
-	public Mono<ResponseEntity<Void>> deleteBook(String id) {
-        return bookRepository.deleteById(id)
-        		.then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
-                .onErrorResume(error -> Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
+	public Mono<Void> deleteBook(String id) {
+		Mono<Books> book = bookRepository.findById(id)
+				.switchIfEmpty(Mono.error(new ResourceNotFoundException("Book with id " + id + " not found")));
+		
+		Mono<String> idToDelete = book.map(books -> books.get_id());
+		return bookRepository.deleteById(idToDelete);
     }
 }
